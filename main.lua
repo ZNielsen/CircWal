@@ -1,53 +1,95 @@
 
-CircWal = require("circwal")
+cw = require("circwal")
 
 function love.load()
+    -- Create the world
+    world = love.physics.newWorld()
+
+    -- Create the shapes for the players
     local radius = 20
-    width, height = love.graphics.getDimensions()
-    p1 = CircWal:new()
-    p1.position.x = width - radius*2
-    p1.position.y = height - radius*2
-    p1.radius = radius
-    p2 = CircWal:new()
-    p2.position.x = radius*2
-    p2.position.y = radius *2
-    p2.radius = radius
+    circle = love.physics.newCircleShape(radius)
+    horn = love.physics.newPolygonShape(radius*2, 0, 0, -(radius/2), 0, (radius/2))
+    butt = love.physics.newRectangleShape(-radius, 0, 10, radius*2/3)
+
+    -- Create the two player bodies
+    window_width, window_height = love.graphics.getDimensions()
+    p1 = {}
+    p1.body = love.physics.newBody(world, 0,0, "dynamic")
+    p1.horn = love.physics.newFixture(p1.body, horn)
+    p1.butt = love.physics.newFixture(p1.body, butt)
+    p1.circle = love.physics.newFixture(p1.body, circle)
+    p1.body:setPosition(window_width - radius*2, window_height - radius*2)
+    p1.body:setAngle(math.pi*5/4)
+
+    p2 = {}
+    p2.body = love.physics.newBody(world, 0,0, "dynamic")
+    p2.horn = love.physics.newFixture(p2.body, horn)
+    p2.butt = love.physics.newFixture(p2.body, butt)
+    p2.circle = love.physics.newFixture(p2.body, circle)
+    p2.body:setPosition(radius*2, radius*2)
+    p2.body:setAngle(math.pi*1/4)
 end
 
 function love.update(dt)
     local move_amount = 500 * dt
-    width, height = love.graphics.getDimensions()
+    local rotate_amount = math.pi*3 * dt
 
+    window_width, window_height = love.graphics.getDimensions()
+
+    -- Player 1
     if love.keyboard.isDown("up") then
-        p1:moveUp(move_amount, 0)
+        cw.moveForward(p1.body, move_amount)
     end
     if love.keyboard.isDown("down") then
-        p1:moveDown(move_amount, height)
+        cw.moveBackward(p1.body, move_amount)
     end
     if love.keyboard.isDown("left") then
-        p1:moveLeft(move_amount, 0)
+        cw.rotateLeft(p1.body, rotate_amount)
     end
     if love.keyboard.isDown("right") then
-        p1:moveRight(move_amount, width)
+        cw.rotateRight(p1.body, rotate_amount)
     end
+    -- Player 2
     if love.keyboard.isDown("f") then
-        p2:moveUp(move_amount, 0)
+        cw.moveForward(p2.body, move_amount)
     end
     if love.keyboard.isDown("s") then
-        p2:moveDown(move_amount, height)
+        cw.moveBackward(p2.body, move_amount)
     end
     if love.keyboard.isDown("r") then
-        p2:moveLeft(move_amount, 0)
+        cw.rotateLeft(p2.body, rotate_amount)
     end
     if love.keyboard.isDown("t") then
-        p2:moveRight(move_amount, width)
+        cw.rotateRight(p2.body, rotate_amount)
     end
 end
 
 function love.draw()
-    local num_sides = 100
-    love.graphics.setColor(0, 1, 0)
-    love.graphics.circle("fill", p1.position.x, p1.position.y, p1.radius, num_sides)
-    love.graphics.setColor(1, 0, 0)
-    love.graphics.circle("fill", p2.position.x, p2.position.y, p1.radius, num_sides)
+    for id, body in pairs(world:getBodies()) do
+        -- Set body colors
+        colors = {}
+        if id == 1 then
+            colors = {{0, 1, 0}, {1, 0, 1}}
+        else
+            colors = {{1, 0, 0}, {0, 1, 1}}
+        end
+
+        for _, fixture in pairs(body:getFixtures()) do
+            local shape = fixture:getShape()
+
+            if shape:typeOf("CircleShape") then
+                love.graphics.setColor(colors[1][1], colors[1][2], colors[1][3])
+                local cx, cy = body:getWorldPoints(shape:getPoint())
+                love.graphics.circle("fill", cx, cy, shape:getRadius())
+            elseif shape:typeOf("PolygonShape") then
+                print("in polyshape")
+                love.graphics.setColor(colors[2][1], colors[2][2], colors[2][3])
+                love.graphics.polygon("fill", body:getWorldPoints(shape:getPoints()))
+                print(body:getWorldPoints(shape:getPoints()))
+            else
+                print("in line")
+                love.graphics.line(body:getWorldPoints(shape:getPoints()))
+            end
+        end
+    end
 end

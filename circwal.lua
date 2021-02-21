@@ -1,38 +1,47 @@
 --  circwal.lua
 --  © Zach Nielsen 2021
 --
---  Modlue/Class Table
 
 require("math")
 
-local CircWal = {
-    position = {x = nil, y = nil},
-    radius = nil
-}
+local CircWal = {}
 
-function CircWal:moveUp(amount, limit)
-    local wall_limit = limit + self.radius
-    self.position.y = math.max(wall_limit, self.position.y - amount)
+function CircWal.moveUp(cw, amount, limit)
+    local wall_limit = limit -- + self.radius
+    cw:setY(math.max(wall_limit, cw:getY() - amount))
 end
-function CircWal:moveDown(amount, limit)
-    local wall_limit = limit - self.radius
-    self.position.y = math.min(wall_limit, self.position.y + amount)
+function CircWal.moveDown(cw, amount, limit)
+    local wall_limit = limit -- - self.radius
+    cw:setY(math.min(wall_limit, cw:getY() + amount))
 end
-function CircWal:moveLeft(amount, limit)
-    local wall_limit = limit + self.radius
-    self.position.x = math.max(wall_limit, self.position.x - amount)
+function CircWal.moveLeft(cw, amount, limit)
+    local wall_limit = limit -- + self.radius
+    cw:setX(math.max(wall_limit, cw:getX() - amount))
 end
-function CircWal:moveRight(amount, limit)
-    local wall_limit = limit - self.radius
-    self.position.x = math.min(wall_limit, self.position.x + amount)
+function CircWal.moveRight(cw, amount, limit)
+    local wall_limit = limit -- radius
+    cw:setX(math.min(wall_limit, cw:getX() + amount))
 end
 
-function CircWal:new(o)
-    local o = o or {}
-    setmetatable(o, {__index = self})
-    o.position = {x = 0, y = 0}
-    o.radius = 20
-    return o
+
+function CircWal.rotateLeft(cw, amount)
+    cw:setAngle(cw:getAngle() - amount)
 end
+function CircWal.rotateRight(cw, amount)
+    cw:setAngle(cw:getAngle() + amount)
+end
+function CircWal.moveForward(cw, amount)
+	local xComp = amount * math.cos(cw:getAngle())
+	local yComp = amount * math.sin(cw:getAngle())
+    cw:setX(math.min(window_width,  math.max(0, cw:getX() + xComp)))
+    cw:setY(math.min(window_height, math.max(0, cw:getY() + yComp)))
+end
+function CircWal.moveBackward(cw, amount)
+	local xComp = amount * math.cos(cw:getAngle())
+	local yComp = amount * math.sin(cw:getAngle())
+    cw:setX(math.min(window_width,  math.max(0, cw:getX() - xComp)))
+    cw:setY(math.min(window_height, math.max(0, cw:getY() - yComp)))
+end
+
 
 return CircWal
