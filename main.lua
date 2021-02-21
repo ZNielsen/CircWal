@@ -15,17 +15,19 @@ function love.load()
     window_width, window_height = love.graphics.getDimensions()
     p1 = {}
     p1.body = love.physics.newBody(world, 0,0, "dynamic")
-    p1.horn = love.physics.newFixture(p1.body, horn)
-    p1.butt = love.physics.newFixture(p1.body, butt)
     p1.circle = love.physics.newFixture(p1.body, circle)
+    p1.butt = love.physics.newFixture(p1.body, butt)
+    p1.horn = love.physics.newFixture(p1.body, horn)
+    p1.horn:setRestitution(0.5)
     p1.body:setPosition(window_width - radius*2, window_height - radius*2)
     p1.body:setAngle(math.pi*5/4)
 
     p2 = {}
     p2.body = love.physics.newBody(world, 0,0, "dynamic")
-    p2.horn = love.physics.newFixture(p2.body, horn)
-    p2.butt = love.physics.newFixture(p2.body, butt)
     p2.circle = love.physics.newFixture(p2.body, circle)
+    p2.butt = love.physics.newFixture(p2.body, butt)
+    p2.horn = love.physics.newFixture(p2.body, horn)
+    p2.horn:setRestitution(0.5)
     p2.body:setPosition(radius*2, radius*2)
     p2.body:setAngle(math.pi*1/4)
 end
@@ -67,29 +69,45 @@ end
 function love.draw()
     for id, body in pairs(world:getBodies()) do
         -- Set body colors
-        colors = {}
+        local colors = {}
         if id == 1 then
             colors = {{0, 1, 0}, {1, 0, 1}}
         else
             colors = {{1, 0, 0}, {0, 1, 1}}
         end
 
+        -- Draw all shapes
         for _, fixture in pairs(body:getFixtures()) do
             local shape = fixture:getShape()
 
             if shape:typeOf("CircleShape") then
+                print("circle rest: " .. fixture:getRestitution())
                 love.graphics.setColor(colors[1][1], colors[1][2], colors[1][3])
                 local cx, cy = body:getWorldPoints(shape:getPoint())
                 love.graphics.circle("fill", cx, cy, shape:getRadius())
             elseif shape:typeOf("PolygonShape") then
-                print("in polyshape")
+                print("PS rest: " .. fixture:getRestitution())
                 love.graphics.setColor(colors[2][1], colors[2][2], colors[2][3])
                 love.graphics.polygon("fill", body:getWorldPoints(shape:getPoints()))
-                print(body:getWorldPoints(shape:getPoints()))
             else
-                print("in line")
                 love.graphics.line(body:getWorldPoints(shape:getPoints()))
             end
         end
     end
+end
+
+function beginContact(a, b, coll)
+
+end
+
+function endContact(a, b, coll)
+
+end
+
+function preSolve(a, b, coll)
+
+end
+
+function postSolve(a, b, coll, normalimpulse, tangentimpulse)
+
 end
