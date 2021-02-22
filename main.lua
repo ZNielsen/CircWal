@@ -15,8 +15,11 @@ function love.load()
     -- Create the two player bodies
     window_width, window_height = love.graphics.getDimensions()
     p1 = {}
+    p2 = {}
+
     p1.body = love.physics.newBody(world, 0,0, "dynamic")
     p1.body:setMass(100)
+    p1.body:setAngularDamping(1)
     p1.circle = love.physics.newFixture(p1.body, circle)
     p1.circle:setUserData("P1 circle")
     -- p1.circle:setCategory(1)
@@ -37,6 +40,7 @@ function love.load()
     p2 = {}
     p2.body = love.physics.newBody(world, 0,0, "dynamic")
     p2.body:setMass(100)
+    p2.body:setAngularDamping(1)
     p2.circle = love.physics.newFixture(p2.body, circle)
     p2.circle:setUserData("P2 circle")
     -- p2.circle:setCategory(1)
@@ -70,11 +74,9 @@ function love.update(dt)
     else
         p1.body:setLinearVelocity(0,0)
     end
-
     if love.keyboard.isDown("left") then
         cw.rotateLeft(p1.body, rotate_amount)
     end
-
     if love.keyboard.isDown("right") then
         cw.rotateRight(p1.body, rotate_amount)
     end
@@ -87,11 +89,9 @@ function love.update(dt)
     else
         p2.body:setLinearVelocity(0,0)
     end
-
     if love.keyboard.isDown("r") then
         cw.rotateLeft(p2.body, rotate_amount)
     end
-
     if love.keyboard.isDown("t") then
         cw.rotateRight(p2.body, rotate_amount)
     end
