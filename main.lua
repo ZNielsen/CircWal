@@ -2,6 +2,8 @@
 cw = require("circwal")
 
 function love.load()
+    print("Initializing...")
+    time_init_start = love.timer.getTime()
     -- Create the world
     world = love.physics.newWorld(0,0,true)
     world:setCallbacks(beginContact, endContact, preSolve, postSolve)
@@ -49,23 +51,24 @@ function love.load()
     p2.controls = {up="f",  down="s",    left="r",    right="t"}
 
     -- Draw a box around the window to keep the players penned in
-    box_body = love.physics.newBody(world, 0,0, "static")
-    box_left = love.physics.newRectangleShape (-5,             window_height/2, 5, window_height)
-    box_right = love.physics.newRectangleShape(window_width+5, window_height/2, 5, window_height)
-    box_top = love.physics.newRectangleShape   (window_width/2, -5,              window_width, 5)
-    box_bottom = love.physics.newRectangleShape(window_width/2, window_height+5, window_width, 5)
-    box_fixture_left = love.physics.newFixture(box_body, box_left)
-    box_fixture_right = love.physics.newFixture(box_body, box_right)
-    box_fixture_top = love.physics.newFixture(box_body, box_top)
-    box_fixture_bottom = love.physics.newFixture(box_body, box_bottom)
-    box_fixture_left:setUserData("window_border")
-    box_fixture_right:setUserData("window_border")
-    box_fixture_top:setUserData("window_border")
-    box_fixture_bottom:setUserData("window_border")
+    cw.setBorders(window_width, window_height)
+
+    -- Lock out to only one winner
+    game_over = false
+
+    -- Have the winners box ready
+    win_world = love.physics.newWorld(0,0,true)
+    winners_box_body = love.physics.newBody(win_world, 0,0, "static")
+    winners_box_shape = love.physics.newRectangleShape (window_width/2, window_height/2, window_width, window_height)
+    winners_box_fixture = love.physics.newFixture(winners_box_body, winners_box_shape)
+
+    time_init = love.timer.getTime() - time_init_start
+    print("Inited in " .. time_init .. "s")
 end
 
 function love.resize(width, height)
     -- Resize the box around the players
+    cw.setBorders(width, height)
 end
 
 function love.update(dt)
@@ -80,11 +83,9 @@ function love.update(dt)
         if love.keyboard.isDown(player.controls.up) then
             cw.moveForward(player.body, move_amount)
             local x, y = player.body:getPosition()
-            print(player.name .. " position: " .. x .. "," .. y)
         elseif love.keyboard.isDown(player.controls.down) then
             cw.moveBackward(player.body, move_amount)
             local x, y = player.body:getPosition()
-            print(player.name .. " position: " .. x .. "," .. y)
         else
             player.body:setLinearVelocity(0,0)
         end
@@ -110,19 +111,34 @@ function love.draw()
         end
 
         -- Draw all shapes
-        for idx, fixture in pairs(body:getFixtures()) do
-            if fixture:getUserData() == "window_border" then break end
-            local shape = fixture:getShape()
+        if game_over == false then
+            for idx, fixture in pairs(body:getFixtures()) do
+                if fixture:getUserData() == "window_border" then break end
+                local shape = fixture:getShape()
 
-            if shape:typeOf("CircleShape") then
-                love.graphics.setColor(colors[1][1], colors[1][2], colors[1][3])
-                local cx, cy = body:getWorldPoints(shape:getPoint())
-                love.graphics.circle("fill", cx, cy, shape:getRadius())
-            elseif shape:typeOf("PolygonShape") then
-                love.graphics.setColor(colors[2][1], colors[2][2], colors[2][3])
-                love.graphics.polygon("fill", body:getWorldPoints(shape:getPoints()))
+                if shape:typeOf("CircleShape") then
+                    love.graphics.setColor(colors[1][1], colors[1][2], colors[1][3])
+                    local cx, cy = body:getWorldPoints(shape:getPoint())
+                    love.graphics.circle("fill", cx, cy, shape:getRadius())
+                elseif shape:typeOf("PolygonShape") then
+                    love.graphics.setColor(colors[2][1], colors[2][2], colors[2][3])
+                    love.graphics.polygon("fill", body:getWorldPoints(shape:getPoints()))
+                else
+                    love.graphics.line(body:getWorldPoints(shape:getPoints()))
+                end
+            end
+        else
+            if winner == "P1" then
+                love.graphics.setColor(p1.colors[1][1], p1.colors[1][2], p1.colors[1][3])
+                love.graphics.polygon("fill", winners_box_body:getWorldPoints(winners_box_shape:getPoints()))
             else
-                love.graphics.line(body:getWorldPoints(shape:getPoints()))
+                love.graphics.setColor(p2.colors[1][1], p2.colors[1][2], p2.colors[1][3])
+                love.graphics.polygon("fill", winners_box_body:getWorldPoints(winners_box_shape:getPoints()))
+            end
+            if love.timer.getTime() - win_screen_time > 5 then
+                love.event.quit("restart")
+            else
+                print(love.timer.getTime() - win_screen_time)
             end
         end
     end
@@ -130,6 +146,23 @@ end
 
 function beginContact(f1, f2, coll)
     print("Contact between " .. f1:getUserData() .. " and " .. f2:getUserData())
+    if game_over == false then
+        if f1:getUserData() == "P1 horn" and f2:getUserData() == "P2 butt" or
+           f2:getUserData() == "P1 horn" and f1:getUserData() == "P2 butt"
+        then
+            -- P1 Wins!
+            game_over = true
+            winner = "P1"
+            win_screen_time = love.timer.getTime()
+        elseif f1:getUserData() == "P2 horn" and f2:getUserData() == "P1 butt" or
+               f2:getUserData() == "P2 horn" and f1:getUserData() == "P1 butt"
+        then
+            -- P2 wins!
+            game_over = true
+            winner = "P2"
+            win_screen_time = love.timer.getTime()
+        end
+    end
 end
 
 function endContact(f1, f2, coll)
