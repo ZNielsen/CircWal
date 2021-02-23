@@ -16,84 +16,84 @@ function love.load()
     window_width, window_height = love.graphics.getDimensions()
     p1 = {}
     p2 = {}
+    p1.name = "P1"
+    p2.name = "P2"
+    p1.initial_pos = {x=(window_width - radius*2), y=(window_height - radius*2), angle=math.pi*5/4}
+    p2.initial_pos = {x=(radius*2), y=(radius*2), angle=math.pi*1/4}
 
-    p1.body = love.physics.newBody(world, 0,0, "dynamic")
-    p1.body:setMass(100)
-    p1.body:setAngularDamping(1)
-    p1.circle = love.physics.newFixture(p1.body, circle)
-    p1.circle:setUserData("P1 circle")
-    -- p1.circle:setCategory(1)
-    -- p1.circle:setMask(1)
-    p1.butt = love.physics.newFixture(p1.body, butt)
-    p1.butt:setUserData("P1 butt")
-    -- p1.butt:setCategory(1)
-    -- p1.butt:setMask(1)
-    p1.horn = love.physics.newFixture(p1.body, horn)
-    p1.horn:setUserData("P1 horn")
-    -- p1.horn:setCategory(1)
-    -- p1.horn:setMask(1)
-    p1.horn:setRestitution(0.5)
-    -- Move + rotate now that the body is constructed
-    p1.body:setPosition(window_width - radius*2, window_height - radius*2)
-    p1.body:setAngle(math.pi*5/4)
+    -- Construct the bodies
+    for _,player in pairs({p1, p2}) do
+        player.body = love.physics.newBody(world, 0,0, "dynamic")
+        player.body:setMass(100)
+        player.body:setAngularDamping(1)
+        player.body:setUserData(player.name .. " body")
+        player.circle = love.physics.newFixture(player.body, circle)
+        player.circle:setUserData(player.name .. " circle")
+        player.butt = love.physics.newFixture(player.body, butt)
+        player.butt:setUserData(player.name .. " butt")
+        player.horn = love.physics.newFixture(player.body, horn)
+        player.horn:setUserData(player.name .. " horn")
+        player.horn:setRestitution(0.5)
+        -- Move + rotate now that the bodies are constructed
+        player.body:setPosition(player.initial_pos.x, player.initial_pos.y)
+        player.body:setAngle(player.initial_pos.angle)
+        world:update(0)
+    end
 
-    p2 = {}
-    p2.body = love.physics.newBody(world, 0,0, "dynamic")
-    p2.body:setMass(100)
-    p2.body:setAngularDamping(1)
-    p2.circle = love.physics.newFixture(p2.body, circle)
-    p2.circle:setUserData("P2 circle")
-    -- p2.circle:setCategory(1)
-    -- p2.circle:setMask(1)
-    p2.butt = love.physics.newFixture(p2.body, butt)
-    p2.butt:setUserData("P2 butt")
-    -- p2.butt:setCategory(1)
-    -- p2.butt:setMask(1)
-    p2.horn = love.physics.newFixture(p2.body, horn)
-    p2.horn:setUserData("P2 horn")
-    -- p2.horn:setCategory(1)
-    -- p2.horn:setMask(1)
-    p2.horn:setRestitution(0.5)
-    -- Move + rotate now that the body is constructed
-    p2.body:setPosition(radius*2, radius*2)
-    p2.body:setAngle(math.pi*1/4)
+    -- Set colors - body, horn/butt
+    p1.colors = {{0, 1, 0}, {1, 0, 1}}
+    p2.colors = {{1, 0, 0}, {0, 1, 1}}
+
+    -- Set controls
+    p1.controls = {up="up", down="down", left="left", right="right"}
+    p2.controls = {up="f",  down="s",    left="r",    right="t"}
+
+    -- Draw a box around the window to keep the players penned in
+    box_body = love.physics.newBody(world, 0,0, "static")
+    box_left = love.physics.newRectangleShape (-5,             window_height/2, 5, window_height)
+    box_right = love.physics.newRectangleShape(window_width+5, window_height/2, 5, window_height)
+    box_top = love.physics.newRectangleShape   (window_width/2, -5,              window_width, 5)
+    box_bottom = love.physics.newRectangleShape(window_width/2, window_height+5, window_width, 5)
+    box_fixture_left = love.physics.newFixture(box_body, box_left)
+    box_fixture_right = love.physics.newFixture(box_body, box_right)
+    box_fixture_top = love.physics.newFixture(box_body, box_top)
+    box_fixture_bottom = love.physics.newFixture(box_body, box_bottom)
+    box_fixture_left:setUserData("window_border")
+    box_fixture_right:setUserData("window_border")
+    box_fixture_top:setUserData("window_border")
+    box_fixture_bottom:setUserData("window_border")
+end
+
+function love.resize(width, height)
+    -- Resize the box around the players
 end
 
 function love.update(dt)
-    -- local move_amount = 500 * dt
+    -- move_amount is velocity, so we don't need to factor in dt
     local move_amount = 500
     local rotate_amount = math.pi*3 * dt
 
     window_width, window_height = love.graphics.getDimensions()
 
-    -- Player 1
-    if love.keyboard.isDown("up") then
-        cw.moveForward(p1.body, move_amount)
-    elseif love.keyboard.isDown("down") then
-        cw.moveBackward(p1.body, move_amount)
-    else
-        p1.body:setLinearVelocity(0,0)
-    end
-    if love.keyboard.isDown("left") then
-        cw.rotateLeft(p1.body, rotate_amount)
-    end
-    if love.keyboard.isDown("right") then
-        cw.rotateRight(p1.body, rotate_amount)
-    end
-
-    -- Player 2
-    if love.keyboard.isDown("f") then
-        cw.moveForward(p2.body, move_amount)
-    elseif love.keyboard.isDown("s") then
-        cw.moveBackward(p2.body, move_amount)
-    else
-        p2.body:setLinearVelocity(0,0)
-    end
-    if love.keyboard.isDown("r") then
-        cw.rotateLeft(p2.body, rotate_amount)
-    end
-    if love.keyboard.isDown("t") then
-        cw.rotateRight(p2.body, rotate_amount)
+    -- Adjust controls for each player
+    for _,player in pairs({p1, p2}) do
+        if love.keyboard.isDown(player.controls.up) then
+            cw.moveForward(player.body, move_amount)
+            local x, y = player.body:getPosition()
+            print(player.name .. " position: " .. x .. "," .. y)
+        elseif love.keyboard.isDown(player.controls.down) then
+            cw.moveBackward(player.body, move_amount)
+            local x, y = player.body:getPosition()
+            print(player.name .. " position: " .. x .. "," .. y)
+        else
+            player.body:setLinearVelocity(0,0)
+        end
+        if love.keyboard.isDown(player.controls.left) then
+            cw.rotateLeft(player.body, rotate_amount)
+        end
+        if love.keyboard.isDown(player.controls.right) then
+            cw.rotateRight(player.body, rotate_amount)
+        end
     end
 
     world:update(dt)
@@ -103,14 +103,15 @@ function love.draw()
     for id, body in pairs(world:getBodies()) do
         -- Set body colors
         local colors = {}
-        if id == 1 then
-            colors = {{0, 1, 0}, {1, 0, 1}}
+        if body:getUserData() == "P1 body" then
+            colors = p1.colors
         else
-            colors = {{1, 0, 0}, {0, 1, 1}}
+            colors = p2.colors
         end
 
         -- Draw all shapes
-        for _, fixture in pairs(body:getFixtures()) do
+        for idx, fixture in pairs(body:getFixtures()) do
+            if fixture:getUserData() == "window_border" then break end
             local shape = fixture:getShape()
 
             if shape:typeOf("CircleShape") then
