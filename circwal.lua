@@ -33,15 +33,11 @@ end
 function CircWal.moveForward(cw, amount)
 	local xComp = amount * math.cos(cw:getAngle())
 	local yComp = amount * math.sin(cw:getAngle())
-    print(xComp)
-    print(yComp)
     cw:setLinearVelocity(xComp, yComp)
 end
 function CircWal.moveBackward(cw, amount)
 	local xComp = amount * math.cos(cw:getAngle() + math.pi)
 	local yComp = amount * math.sin(cw:getAngle() + math.pi)
-    print(xComp)
-    print(yComp)
     cw:setLinearVelocity(xComp, yComp)
 end
 
