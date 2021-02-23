@@ -48,7 +48,8 @@ function love.load()
 
     -- Set controls
     p1.controls = {up="up", down="down", left="left", right="right"}
-    p2.controls = {up="f",  down="s",    left="r",    right="t"}
+    -- p2.controls = {up="f",  down="s",    left="r",    right="t"}
+    p2.controls = {up="w",  down="s",    left="a",    right="d"}
 
     -- Draw a box around the window to keep the players penned in
     cw.setBorders(window_width, window_height)
