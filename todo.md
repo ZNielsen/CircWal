@@ -1,3 +1,4 @@
 - Make the butt look like an actual butt
 - Mess around with all the values
 - Throw text up instead of just a color
+- Use a settings file for the input controls
